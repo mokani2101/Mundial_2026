@@ -863,7 +863,7 @@ table { border-collapse: collapse; width: 100%; }
               </div>
               <button class="btn btn-primary" onclick="saveConfig()">Zapisz konfigurację</button>
             <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-2)">
-              💡 <b>Tip:</b> Możesz też wpisać klucze na stałe bezpośrednio w kodzie HTML (szukaj <code>WPISZ_URL_APPS_SCRIPT</code>) — wtedy nie musisz konfigurować po każdym wdrożeniu.
+              💡 <b>Tip:</b> Możesz też wpisać klucze na stałe bezpośrednio w kodzie HTML (klucze są już wpisane na stałe w kodzie) — wtedy nie musisz konfigurować po każdym wdrożeniu.
             </p>
             </div>
           </div>
@@ -1096,11 +1096,12 @@ function doLogin() {
   });
 
   showToast('Ładowanie danych...', '');
-  // Pobierz aktualne mecze/kursy/wyniki z Sheets
-  loadMatchesFromSheets().then(() => {
-    loadBetsFromSheets().then(() => {
-      renderAll();
-      showToast('Witaj, ' + user.nick + '! ⚽', 'success');
+  loadUsersFromSheets().then(() => {
+    loadMatchesFromSheets().then(() => {
+      loadBetsFromSheets().then(() => {
+        renderAll();
+        showToast('Witaj, ' + user.nick + '! ⚽', 'success');
+      });
     });
   });
 }
@@ -1557,6 +1558,69 @@ function renderAdmin() {
   document.getElementById('oddsApiKey').value = APP.config.oddsApiKey || '';
 }
 
+
+async function syncUsersToSheets() {
+  // Nie potrzebna - używamy addUserToSheets / removeUserFromSheets bezpośrednio
+  localStorage.setItem('mundial_users', JSON.stringify(USERS));
+}
+
+async function addUserToSheets(nick, pass, isAdmin) {
+  if (!APP.config.gsScriptUrl) return;
+  try {
+    const params = new URLSearchParams({ action: 'addUser', nick, pass, isAdmin: isAdmin ? 'true' : 'false' });
+    await fetch(APP.config.gsScriptUrl + '?' + params.toString());
+  } catch(e) { console.warn('addUser failed:', e); }
+}
+
+async function removeUserFromSheets(nick) {
+  if (!APP.config.gsScriptUrl) return;
+  try {
+    const params = new URLSearchParams({ action: 'removeUser', nick });
+    await fetch(APP.config.gsScriptUrl + '?' + params.toString());
+  } catch(e) { console.warn('removeUser failed:', e); }
+}
+
+async function loadUsersFromSheets() {
+  // Najpierw wczytaj z localStorage
+  try {
+    const cached = localStorage.getItem('mundial_users');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Zachowaj admina, nadpisz resztę
+        parsed.forEach(u => {
+          if (!USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase())) {
+            USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: 0 });
+          }
+        });
+      }
+    }
+  } catch(e) {}
+
+  if (!APP.config.gsScriptUrl) return;
+  try {
+    const url = APP.config.gsScriptUrl + '?action=getUsers';
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { return; }
+    if (Array.isArray(data) && data.length > 0) {
+      data.forEach(u => {
+        const existing = USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase());
+        if (!existing) {
+          USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: 0 });
+        } else {
+          existing.pass = u.pass;
+          existing.isAdmin = u.isAdmin || existing.isAdmin;
+        }
+      });
+      localStorage.setItem('mundial_users', JSON.stringify(USERS));
+      console.log('Użytkownicy z Sheets:', data.length);
+    }
+  } catch(e) { console.warn('loadUsers failed:', e); }
+}
+
 function addPlayer() {
   const nick = document.getElementById('newPlayerName').value.trim();
   const pass = document.getElementById('newPlayerPass').value.trim();
@@ -1567,13 +1631,18 @@ function addPlayer() {
   document.getElementById('newPlayerPass').value = '';
   renderAdmin();
   showToast(`Dodano gracza: ${nick}`, 'success');
+  localStorage.setItem('mundial_users', JSON.stringify(USERS));
+  addUserToSheets(nick, pass, false);
 }
 
 function removePlayer(idx) {
   if (USERS[idx].nick === APP.currentUser?.nick) { showToast('Nie możesz usunąć samego siebie', 'error'); return; }
+  const removedNick = USERS[idx].nick;
   USERS.splice(idx, 1);
   renderAdmin();
   showToast('Gracz usunięty', 'success');
+  localStorage.setItem('mundial_users', JSON.stringify(USERS));
+  removeUserFromSheets(removedNick);
 }
 
 function setResult(matchId, result, score) {
