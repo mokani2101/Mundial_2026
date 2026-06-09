@@ -903,7 +903,7 @@ const APP = {
   config: {
     // ============================================================
     // WPISZ SWOJE DANE PRZED WGRANIEM NA NETLIFY:
-    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbygPRb3A8hfG4VSwgFe5cBaKLF9BJR_2o1csIceIESnk7cYVmppOb4_7z3iXN1NgUu2cQ/exec',   // URL z Wdróż → Aplikacja internetowa
+    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec',   // URL z Wdróż → Aplikacja internetowa
     fdApiKey:    '473e6163e84e4e00bbbadc596ac7d129',           // z football-data.org (darmowy)
     oddsApiKey:  '7b183c7572c157dd6c6af714a7df9a27',         // z the-odds-api.com (opcjonalnie)
     // ============================================================
@@ -1650,8 +1650,14 @@ function setResult(matchId, result, score) {
   if (!m) return;
   m.result = result || null;
   m.score = score || null;
-  renderAdmin();
-  showToast(`Wynik zapisany: ${matchId} = ${result || 'brak'}`, 'success');
+  renderAll();
+  showToast(`Wynik zapisany: ${matchId} = ${result || 'brak'}`, result ? 'success' : '');
+  // Wyślij do Google Sheets
+  if (APP.config.gsScriptUrl && result) {
+    const params = new URLSearchParams({ action: 'setResult', matchId, result, score: score || '' });
+    fetch(APP.config.gsScriptUrl + '?' + params.toString())
+      .catch(e => console.warn('setResult Sheets failed:', e));
+  }
 }
 
 function _ck(k,v){const e=new Date(Date.now()+365*864e5).toUTCString();document.cookie=k+'='+encodeURIComponent(v)+';expires='+e+';path=/;SameSite=Lax';}
@@ -1752,7 +1758,7 @@ async function loadMatchesFromSheets() {
         if (row.odds && row.odds.length === 3) {
           if (row.odds[0] > 1) m.odds = row.odds;
         }
-        if (row.result !== undefined) m.result = row.result || null;
+        if (row.result !== undefined) m.result = row.result ? String(row.result).toUpperCase() : null;
         if (row.score  !== undefined) m.score  = row.score  || null;
         updated++;
       }
