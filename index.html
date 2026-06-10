@@ -913,8 +913,13 @@ const APP = {
 (function(){
   const c={};
   document.cookie.split(';').forEach(s=>{const p=s.trim().split('=');if(p.length>=2)c[p[0]]=decodeURIComponent(p.slice(1).join('='));});
-  // Cookies nadpisują wbudowane wartości — priority: cookies > hardcoded
-  if(c['gs_url']   && c['gs_url']   !== '') APP.config.gsScriptUrl = c['gs_url'];
+  // Hardcoded URL zawsze ma pierwszeństwo - cookie tylko jako fallback gdy brak hardcoded
+  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec';
+  if(hardcodedUrl && hardcodedUrl !== 'WPISZ_URL_APPS_SCRIPT') {
+    APP.config.gsScriptUrl = hardcodedUrl; // zawsze użyj aktualnego URL z kodu
+  } else if(c['gs_url'] && c['gs_url'] !== '') {
+    APP.config.gsScriptUrl = c['gs_url'];
+  }
   if(c['fd_key']   && c['fd_key']   !== '') APP.config.fdApiKey    = c['fd_key'];
   if(c['odds_key'] && c['odds_key'] !== '') APP.config.oddsApiKey  = c['odds_key'];
   // Jeśli wbudowane to placeholdery - wyczyść
@@ -1072,10 +1077,22 @@ let ALL_BETS = {}; // {nick: {matchId: {pick, savedAt, points}}}
 // ============================================================
 // AUTH
 // ============================================================
-function doLogin() {
+async function doLogin() {
   const nick = document.getElementById('loginUser').value.trim();
   const pass = document.getElementById('loginPass').value.trim();
-  const user = USERS.find(u => u.nick.toLowerCase() === nick.toLowerCase() && u.pass === pass);
+  let user = USERS.find(u => u.nick.toLowerCase() === nick.toLowerCase() && u.pass === pass);
+
+  // Jeśli nie znaleziono lokalnie - pobierz użytkowników z Sheets i spróbuj ponownie
+  if (!user && APP.config.gsScriptUrl) {
+    document.getElementById('loginError').classList.remove('visible');
+    document.getElementById('loginBtn').textContent = 'Sprawdzam...';
+    document.getElementById('loginBtn').disabled = true;
+    await loadUsersFromSheets();
+    document.getElementById('loginBtn').textContent = 'Zaloguj się';
+    document.getElementById('loginBtn').disabled = false;
+    user = USERS.find(u => u.nick.toLowerCase() === nick.toLowerCase() && u.pass === pass);
+  }
+
   if (!user) {
     document.getElementById('loginError').classList.add('visible');
     return;
