@@ -1113,7 +1113,7 @@ async function doLogin() {
     el.style.display = user.isAdmin ? '' : 'none';
   });
 
- showToast('Ładowanie danych...');
+showToast('Ładowanie danych...');
 loadUsersFromSheets()
   .then(() => loadMatchesFromSheets())
   .then(() => loadBetsFromSheets())
@@ -1122,7 +1122,7 @@ loadUsersFromSheets()
     showToast(`Witaj, ${user.nick}!`, 'success');
   })
   .catch(e => {
-    console.error('Błąd ładowania danych:', e);
+    console.error('Błąd ładowania:', e);
     renderAll();
     showToast(`Witaj, ${user.nick}!`, 'success');
   });
