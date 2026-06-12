@@ -1229,6 +1229,8 @@ function getUserStats(nick) {
   if (!hasBets) {
     const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
     if (u && u.points > 0) points = u.points;
+    if (u && u.correct !== undefined) correct = u.correct || 0;
+    if (u && u.total !== undefined) total = u.total || 0;
   }
   return { points, correct, total };
 }
@@ -1632,11 +1634,13 @@ async function loadUsersFromSheets() {
       data.forEach(u => {
         const existing = USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase());
         if (!existing) {
-          USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: Number(u.points) || 0 });
+          USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: Number(u.points) || 0, correct: Number(u.correct) || 0, total: Number(u.total) || 0 });
         } else {
           existing.pass = u.pass;
           existing.isAdmin = u.isAdmin || existing.isAdmin;
-          if (u.points !== undefined) existing.points = Number(u.points) || 0;
+          if (u.points   !== undefined) existing.points  = Number(u.points)  || 0;
+          if (u.correct  !== undefined) existing.correct = Number(u.correct) || 0;
+          if (u.total    !== undefined) existing.total   = Number(u.total)   || 0;
         }
       });
       localStorage.setItem('mundial_users', JSON.stringify(USERS));
