@@ -1220,22 +1220,23 @@ function getUserStats(nick) {
   let points = 0, correct = 0, total = 0;
   const hasBets = Object.keys(bets).length > 0;
 
+  // Zawsze pobierz total z arkusza (liczba rozegranych meczów turnieju)
+  const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+  total = (u && u.total) ? u.total : 0;
+
   if (hasBets) {
-    // mamy lokalne typy — licz na bieżąco
+    // Licz punkty i trafione z lokalnych typów
     for (const m of MATCHES) {
       const b = bets[m.id];
       if (!b) continue;
-      total++;
       const pts = calcPoints(m, b.pick);
       if (pts > 0) { points += pts; correct++; }
     }
   } else {
-    // brak lokalnych typów — bierz zapisane dane z arkusza (kolumny D/E/F)
-    const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+    // Brak lokalnych typów — bierz też punkty i trafione z arkusza
     if (u) {
       points  = u.points  || 0;
       correct = u.correct || 0;
-      total   = u.total   || 0;
     }
   }
   return { points, correct, total };
