@@ -903,7 +903,7 @@ const APP = {
   config: {
     // ============================================================
     // WPISZ SWOJE DANE PRZED WGRANIEM NA NETLIFY:
-    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbzrYrSOR0_LJTe83zuL80XcYBdmTsHOSV5IcFb_EYBb3h1YnH8maIyAxPjEkQKS8pJU2A/exec',   // URL z Wdróż → Aplikacja internetowa
+    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec',   // URL z Wdróż → Aplikacja internetowa
     fdApiKey:    '473e6163e84e4e00bbbadc596ac7d129',           // z football-data.org (darmowy)
     oddsApiKey:  '7b183c7572c157dd6c6af714a7df9a27',         // z the-odds-api.com (opcjonalnie)
     // ============================================================
@@ -914,7 +914,7 @@ const APP = {
   const c={};
   document.cookie.split(';').forEach(s=>{const p=s.trim().split('=');if(p.length>=2)c[p[0]]=decodeURIComponent(p.slice(1).join('='));});
   // Hardcoded URL zawsze ma pierwszeństwo - cookie tylko jako fallback gdy brak hardcoded
-  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbzrYrSOR0_LJTe83zuL80XcYBdmTsHOSV5IcFb_EYBb3h1YnH8maIyAxPjEkQKS8pJU2A/exec';
+  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec';
   if(hardcodedUrl && hardcodedUrl !== 'WPISZ_URL_APPS_SCRIPT') {
     APP.config.gsScriptUrl = hardcodedUrl; // zawsze użyj aktualnego URL z kodu
   } else if(c['gs_url'] && c['gs_url'] !== '') {
@@ -930,20 +930,20 @@ const APP = {
 
 // ---- USERS (in production loaded from GS, here as local seed) ----
 let USERS = [
-  { nick: 'Krzysztof R', pass: 'KR1234',  isAdmin: false, points: 0 },
-  { nick: 'Arek',        pass: 'AR1234',  isAdmin: false, points: 0 },
-  { nick: 'Błażej',       pass: 'BL1234',  isAdmin: false, points: 0 },
-  { nick: 'Maurycy',     pass: 'MA1234',  isAdmin: false, points: 0 },
-  { nick: 'Szymon',      pass: 'SZ1234',  isAdmin: false, points: 0 },
-  { nick: 'Paweł',       pass: 'PA1234',  isAdmin: false, points: 0 },
-  { nick: 'Kasia',       pass: 'KA1234',  isAdmin: false, points: 0 },
-  { nick: 'Natalia',     pass: 'NA1234',  isAdmin: false, points: 0 },
-  { nick: 'Ewa R',       pass: 'ER1234',  isAdmin: false, points: 0 },
-  { nick: 'Zuza',        pass: 'ZU1234',  isAdmin: false, points: 0 },
-  { nick: 'Marta',       pass: 'MAR1234', isAdmin: false, points: 0 },
-  { nick: 'Krzysztof H', pass: 'KH1234',  isAdmin: true,  points: 0 },
-  { nick: 'Ania B',       pass: 'AN1234',  isAdmin: false, points: 0 },
-  { nick: 'Magda',        pass: 'MA1234',  isAdmin: false, points: 0 },
+  { nick: 'Krzysztof R', pass: 'KR1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Arek',        pass: 'AR1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Błażej',       pass: 'BL1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Maurycy',     pass: 'MA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Szymon',      pass: 'SZ1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Paweł',       pass: 'PA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Kasia',       pass: 'KA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Natalia',     pass: 'NA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Ewa R',       pass: 'ER1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Zuza',        pass: 'ZU1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Marta',       pass: 'MAR1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Krzysztof H', pass: 'KH1234',  isAdmin: true,  points: 0, correct: 0, total: 0 },
+  { nick: 'Ania B',       pass: 'AN1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Magda',        pass: 'MA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
 ];
 
 // ---- MATCHES (MŚ 2026 faza grupowa - przykładowe dane, zastąp prawdziwymi z API) ----
@@ -1216,36 +1216,16 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
-  const bets = ALLBETS[nick] || {};
+  const bets = ALL_BETS[nick] || {};
   let points = 0, correct = 0, total = 0;
   const hasBets = Object.keys(bets).length > 0;
-
-  if (hasBets) {
-    // mamy lokalne typy — licz na bieżąco
-    for (const m of MATCHES) {
-      const b = bets[m.id];
-      if (!b) continue;
-      total++;
-      const pts = calcPoints(m, b.pick);
-      if (pts > 0) { points += pts; correct++; }
-    }
-  } else {
-    // brak lokalnych typów — bierz zapisane dane z arkusza (kolumny D/E/F)
-    const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-    if (u) {
- // Policz liczbę wszystkich meczów z wynikiem (rozegranych)
-var playedMatches = 0;
-for (var m = 1; m < matches.length; m++) {
-  if (matches[m][8] && String(matches[m][8]).trim() !== '') playedMatches++;
-}
-
-sheetUsers.getRange(i + 1, 4).setValue(points);
-sheetUsers.getRange(i + 1, 5).setValue(correct);
-sheetUsers.getRange(i + 1, 6).setValue(playedMatches); // total = rozegrane mecze, nie obstawione
-    }
+  for (const m of MATCHES) {
+    const b = bets[m.id];
+    if (!b) continue;
+    total++;
+    const pts = calcPoints(m, b.pick);
+    if (pts > 0) { points += pts; correct++; }
   }
-  return { points, correct, total };
-}
   if (!hasBets) {
     const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
     if (u && u.points > 0) points = u.points;
@@ -1626,36 +1606,22 @@ async function removeUserFromSheets(nick) {
 }
 
 async function loadUsersFromSheets() {
-  // Najpierw wczytaj z localStorage (cache)
+  // Najpierw wczytaj z localStorage
   try {
     const cached = localStorage.getItem('mundial_users');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        // Zachowaj admina, nadpisz resztę
         parsed.forEach(u => {
           if (!USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase())) {
-            USERS.push({
-              nick: u.nick,
-              pass: u.pass,
-              isAdmin: u.isAdmin || false,
-              points: Number(u.points) || 0,
-              correct: Number(u.correct) || 0,
-              total:   Number(u.total)   || 0
-            });
-          } else {
-            const existing = USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase());
-            existing.pass    = u.pass;
-            existing.isAdmin = u.isAdmin || existing.isAdmin;
-            if (u.points  !== undefined) existing.points  = Number(u.points)  || 0;
-            if (u.correct !== undefined) existing.correct = Number(u.correct) || 0;
-            if (u.total   !== undefined) existing.total   = Number(u.total)   || 0;
+            USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: 0 });
           }
         });
       }
     }
   } catch(e) {}
 
-  // Pobierz świeże dane z Google Sheets
   if (!APP.config.gsScriptUrl) return;
   try {
     const url = APP.config.gsScriptUrl + '?action=getUsers';
@@ -1668,28 +1634,19 @@ async function loadUsersFromSheets() {
       data.forEach(u => {
         const existing = USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase());
         if (!existing) {
-          USERS.push({
-            nick:    u.nick,
-            pass:    u.pass,
-            isAdmin: u.isAdmin || false,
-            points:  Number(u.points)  || 0,
-            correct: Number(u.correct) || 0,
-            total:   Number(u.total)   || 0
-          });
+          USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: Number(u.points) || 0, correct: Number(u.correct) || 0, total: Number(u.total) || 0 });
         } else {
-          existing.pass    = u.pass;
+          existing.pass = u.pass;
           existing.isAdmin = u.isAdmin || existing.isAdmin;
-          if (u.points  !== undefined) existing.points  = Number(u.points)  || 0;
-          if (u.correct !== undefined) existing.correct = Number(u.correct) || 0;
-          if (u.total   !== undefined) existing.total   = Number(u.total)   || 0;
+          if (u.points   !== undefined) existing.points  = Number(u.points)  || 0;
+          if (u.correct  !== undefined) existing.correct = Number(u.correct) || 0;
+          if (u.total    !== undefined) existing.total   = Number(u.total)   || 0;
         }
       });
       localStorage.setItem('mundial_users', JSON.stringify(USERS));
       console.log('Użytkownicy z Sheets:', data.length);
     }
-  } catch(e) {
-    console.warn('loadUsers failed', e);
-  }
+  } catch(e) { console.warn('loadUsers failed:', e); }
 }
 
 function addPlayer() {
@@ -1697,7 +1654,7 @@ function addPlayer() {
   const pass = document.getElementById('newPlayerPass').value.trim();
   if (!nick || !pass) { showToast('Wypełnij nick i hasło', 'error'); return; }
   if (USERS.find(u => u.nick.toLowerCase() === nick.toLowerCase())) { showToast('Taki nick już istnieje', 'error'); return; }
-  USERS.push({ nick, pass, isAdmin: false, points: 0 });
+  USERS.push({ nick, pass, isAdmin: false, points: 0, correct: 0, total: 0 });
   document.getElementById('newPlayerName').value = '';
   document.getElementById('newPlayerPass').value = '';
   renderAdmin();
