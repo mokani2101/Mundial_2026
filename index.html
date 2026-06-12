@@ -1113,12 +1113,19 @@ async function doLogin() {
     el.style.display = user.isAdmin ? '' : 'none';
   });
 
-  showToast('Ładowanie danych...', '');
-  loadUsersFromSheets().then(() => {
-    loadMatchesFromSheets().then(() => {
-      loadBetsFromSheets().then(() => {
-        renderAll();
-        showToast('Witaj, ' + user.nick + '! ⚽', 'success');
+ showToast('Ładowanie danych...');
+loadUsersFromSheets()
+  .then(() => loadMatchesFromSheets())
+  .then(() => loadBetsFromSheets())
+  .then(() => {
+    renderAll();
+    showToast(`Witaj, ${user.nick}!`, 'success');
+  })
+  .catch(e => {
+    console.error('Błąd ładowania danych:', e);
+    renderAll();
+    showToast(`Witaj, ${user.nick}!`, 'success');
+  });
       });
     });
   });
