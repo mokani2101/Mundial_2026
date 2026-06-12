@@ -903,7 +903,7 @@ const APP = {
   config: {
     // ============================================================
     // WPISZ SWOJE DANE PRZED WGRANIEM NA NETLIFY:
-    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec',   // URL z Wdróż → Aplikacja internetowa
+    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbzrYrSOR0_LJTe83zuL80XcYBdmTsHOSV5IcFb_EYBb3h1YnH8maIyAxPjEkQKS8pJU2A/exec',   // URL z Wdróż → Aplikacja internetowa
     fdApiKey:    '473e6163e84e4e00bbbadc596ac7d129',           // z football-data.org (darmowy)
     oddsApiKey:  '7b183c7572c157dd6c6af714a7df9a27',         // z the-odds-api.com (opcjonalnie)
     // ============================================================
@@ -914,7 +914,7 @@ const APP = {
   const c={};
   document.cookie.split(';').forEach(s=>{const p=s.trim().split('=');if(p.length>=2)c[p[0]]=decodeURIComponent(p.slice(1).join('='));});
   // Hardcoded URL zawsze ma pierwszeństwo - cookie tylko jako fallback gdy brak hardcoded
-  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec';
+  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbzrYrSOR0_LJTe83zuL80XcYBdmTsHOSV5IcFb_EYBb3h1YnH8maIyAxPjEkQKS8pJU2A/exec';
   if(hardcodedUrl && hardcodedUrl !== 'WPISZ_URL_APPS_SCRIPT') {
     APP.config.gsScriptUrl = hardcodedUrl; // zawsze użyj aktualnego URL z kodu
   } else if(c['gs_url'] && c['gs_url'] !== '') {
