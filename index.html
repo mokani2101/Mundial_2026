@@ -930,20 +930,20 @@ const APP = {
 
 // ---- USERS (in production loaded from GS, here as local seed) ----
 let USERS = [
-  { nick: 'Krzysztof R',  pass: 'KR1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Arek',         pass: 'AR1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Błażej',       pass: 'BL1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Maurycy',      pass: 'MA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Szymon',       pass: 'SZ1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Paweł',        pass: 'PA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Kasia',        pass: 'KA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Natalia',      pass: 'NA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Ewa R',        pass: 'ER1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Zuza',         pass: 'ZU1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Marta',        pass: 'MAR1234', isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Krzysztof H',  pass: 'KH1234',  isAdmin: true,  points: 0, correct: 0, total: 0 },
-  { nick: 'Ania B',       pass: 'AN1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Magda',        pass: 'MA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Krzysztof R', pass: 'KR1234',  isAdmin: false, points: 0 },
+  { nick: 'Arek',        pass: 'AR1234',  isAdmin: false, points: 0 },
+  { nick: 'Błażej',       pass: 'BL1234',  isAdmin: false, points: 0 },
+  { nick: 'Maurycy',     pass: 'MA1234',  isAdmin: false, points: 0 },
+  { nick: 'Szymon',      pass: 'SZ1234',  isAdmin: false, points: 0 },
+  { nick: 'Paweł',       pass: 'PA1234',  isAdmin: false, points: 0 },
+  { nick: 'Kasia',       pass: 'KA1234',  isAdmin: false, points: 0 },
+  { nick: 'Natalia',     pass: 'NA1234',  isAdmin: false, points: 0 },
+  { nick: 'Ewa R',       pass: 'ER1234',  isAdmin: false, points: 0 },
+  { nick: 'Zuza',        pass: 'ZU1234',  isAdmin: false, points: 0 },
+  { nick: 'Marta',       pass: 'MAR1234', isAdmin: false, points: 0 },
+  { nick: 'Krzysztof H', pass: 'KH1234',  isAdmin: true,  points: 0 },
+  { nick: 'Ania B',       pass: 'AN1234',  isAdmin: false, points: 0 },
+  { nick: 'Magda',        pass: 'MA1234',  isAdmin: false, points: 0 },
 ];
 
 // ---- MATCHES (MŚ 2026 faza grupowa - przykładowe dane, zastąp prawdziwymi z API) ----
@@ -1113,22 +1113,15 @@ async function doLogin() {
     el.style.display = user.isAdmin ? '' : 'none';
   });
 
-showToast('Ładowanie danych...');
-loadUsersFromSheets()
-  .then(() => loadMatchesFromSheets())
-  .then(() => loadBetsFromSheets())
-  .then(() => {
-    renderAll();
-    showToast(`Witaj, ${user.nick}!`, 'success');
-  })
-  .catch(e => {
-    console.error('Błąd ładowania:', e);
-    renderAll();
-    showToast(`Witaj, ${user.nick}!`, 'success');
+  showToast('Ładowanie danych...', '');
+  loadUsersFromSheets().then(() => {
+    loadMatchesFromSheets().then(() => {
+      loadBetsFromSheets().then(() => {
+        renderAll();
+        showToast('Witaj, ' + user.nick + '! ⚽', 'success');
+      });
+    });
   });
-
-
-
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
@@ -1227,23 +1220,22 @@ function getUserStats(nick) {
   let points = 0, correct = 0, total = 0;
   const hasBets = Object.keys(bets).length > 0;
 
-  // Zawsze pobierz total z arkusza (liczba rozegranych meczów turnieju)
-  const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-  total = (u && u.total) ? u.total : 0;
-
   if (hasBets) {
-    // Licz punkty i trafione z lokalnych typów
+    // mamy lokalne typy — licz na bieżąco
     for (const m of MATCHES) {
       const b = bets[m.id];
       if (!b) continue;
+      total++;
       const pts = calcPoints(m, b.pick);
       if (pts > 0) { points += pts; correct++; }
     }
   } else {
-    // Brak lokalnych typów — bierz też punkty i trafione z arkusza
+    // brak lokalnych typów — bierz zapisane dane z arkusza (kolumny D/E/F)
+    const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
     if (u) {
       points  = u.points  || 0;
       correct = u.correct || 0;
+      total   = u.total   || 0;
     }
   }
   return { points, correct, total };
