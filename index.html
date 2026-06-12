@@ -1216,21 +1216,27 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
-  const bets = ALL_BETS[nick] || {};
+  const bets = ALLBETS[nick] || {};
   let points = 0, correct = 0, total = 0;
   const hasBets = Object.keys(bets).length > 0;
-  for (const m of MATCHES) {
-    const b = bets[m.id];
-    if (!b) continue;
-    total++;
-    const pts = calcPoints(m, b.pick);
-    if (pts > 0) { points += pts; correct++; }
-  }
-  if (!hasBets) {
+
+  if (hasBets) {
+    // mamy lokalne typy — licz na bieżąco
+    for (const m of MATCHES) {
+      const b = bets[m.id];
+      if (!b) continue;
+      total++;
+      const pts = calcPoints(m, b.pick);
+      if (pts > 0) { points += pts; correct++; }
+    }
+  } else {
+    // brak lokalnych typów — bierz zapisane dane z arkusza (kolumny D/E/F)
     const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-    if (u && u.points > 0) points = u.points;
-    if (u && u.correct !== undefined) correct = u.correct || 0;
-    if (u && u.total !== undefined) total = u.total || 0;
+    if (u) {
+      points  = u.points  || 0;
+      correct = u.correct || 0;
+      total   = u.total   || 0;
+    }
   }
   return { points, correct, total };
 }
