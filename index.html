@@ -903,7 +903,7 @@ const APP = {
   config: {
     // ============================================================
     // WPISZ SWOJE DANE PRZED WGRANIEM NA NETLIFY:
-    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbzrYrSOR0_LJTe83zuL80XcYBdmTsHOSV5IcFb_EYBb3h1YnH8maIyAxPjEkQKS8pJU2A/exec',   // URL z Wdróż → Aplikacja internetowa
+    gsScriptUrl: 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec',   // URL z Wdróż → Aplikacja internetowa
     fdApiKey:    '473e6163e84e4e00bbbadc596ac7d129',           // z football-data.org (darmowy)
     oddsApiKey:  '7b183c7572c157dd6c6af714a7df9a27',         // z the-odds-api.com (opcjonalnie)
     // ============================================================
@@ -914,7 +914,7 @@ const APP = {
   const c={};
   document.cookie.split(';').forEach(s=>{const p=s.trim().split('=');if(p.length>=2)c[p[0]]=decodeURIComponent(p.slice(1).join('='));});
   // Hardcoded URL zawsze ma pierwszeństwo - cookie tylko jako fallback gdy brak hardcoded
-  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbzrYrSOR0_LJTe83zuL80XcYBdmTsHOSV5IcFb_EYBb3h1YnH8maIyAxPjEkQKS8pJU2A/exec';
+  const hardcodedUrl = 'https://script.google.com/macros/s/AKfycbyYJjy7DManAA88byVzqghBcYMCVd4hvXSvFHRwdjfwawkONsCnQTOwB8IaQ4NNBDPXlw/exec';
   if(hardcodedUrl && hardcodedUrl !== 'WPISZ_URL_APPS_SCRIPT') {
     APP.config.gsScriptUrl = hardcodedUrl; // zawsze użyj aktualnego URL z kodu
   } else if(c['gs_url'] && c['gs_url'] !== '') {
@@ -930,20 +930,17 @@ const APP = {
 
 // ---- USERS (in production loaded from GS, here as local seed) ----
 let USERS = [
-  { nick: 'Krzysztof R', pass: 'KR1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Arek',        pass: 'AR1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Błażej',       pass: 'BL1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Maurycy',     pass: 'MA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Szymon',      pass: 'SZ1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Paweł',       pass: 'PA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Kasia',       pass: 'KA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Natalia',     pass: 'NA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Ewa R',       pass: 'ER1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Zuza',        pass: 'ZU1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Marta',       pass: 'MAR1234', isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Krzysztof H', pass: 'KH1234',  isAdmin: true,  points: 0, correct: 0, total: 0 },
-  { nick: 'Ania B',       pass: 'AN1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
-  { nick: 'Magda',        pass: 'MA1234',  isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Krzysztof R', pass: 'KR1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Arek',        pass: 'AR1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Błażej',      pass: 'BL1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Maurycy',     pass: 'MA1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Szymon',      pass: 'SZ1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Kuba',        pass: 'PA1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Kasia',       pass: 'KA1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Natalia',     pass: 'NA1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Magda',       pass: 'ER1234', isAdmin: false, points: 0, correct: 0, total: 0 },
+  { nick: 'Krzysztof H', pass: 'KH1234', isAdmin: true,  points: 0, correct: 0, total: 0 },
+  { nick: 'Ania B',      pass: 'AN1234', isAdmin: false, points: 0, correct: 0, total: 0 },
 ];
 
 // ---- MATCHES (MŚ 2026 faza grupowa - przykładowe dane, zastąp prawdziwymi z API) ----
