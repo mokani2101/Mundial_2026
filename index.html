@@ -1233,10 +1233,24 @@ function getUserStats(nick) {
     // brak lokalnych typów — bierz zapisane dane z arkusza (kolumny D/E/F)
     const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
     if (u) {
-      points  = u.points  || 0;
-      correct = u.correct || 0;
-      total   = u.total   || 0;
+ // Policz liczbę wszystkich meczów z wynikiem (rozegranych)
+var playedMatches = 0;
+for (var m = 1; m < matches.length; m++) {
+  if (matches[m][8] && String(matches[m][8]).trim() !== '') playedMatches++;
+}
+
+sheetUsers.getRange(i + 1, 4).setValue(points);
+sheetUsers.getRange(i + 1, 5).setValue(correct);
+sheetUsers.getRange(i + 1, 6).setValue(playedMatches); // total = rozegrane mecze, nie obstawione
     }
+  }
+  return { points, correct, total };
+}
+  if (!hasBets) {
+    const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+    if (u && u.points > 0) points = u.points;
+    if (u && u.correct !== undefined) correct = u.correct || 0;
+    if (u && u.total !== undefined) total = u.total || 0;
   }
   return { points, correct, total };
 }
