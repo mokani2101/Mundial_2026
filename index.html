@@ -1606,22 +1606,36 @@ async function removeUserFromSheets(nick) {
 }
 
 async function loadUsersFromSheets() {
-  // Najpierw wczytaj z localStorage
+  // Najpierw wczytaj z localStorage (cache)
   try {
     const cached = localStorage.getItem('mundial_users');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Zachowaj admina, nadpisz resztę
         parsed.forEach(u => {
           if (!USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase())) {
-            USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: 0 });
+            USERS.push({
+              nick: u.nick,
+              pass: u.pass,
+              isAdmin: u.isAdmin || false,
+              points: Number(u.points) || 0,
+              correct: Number(u.correct) || 0,
+              total:   Number(u.total)   || 0
+            });
+          } else {
+            const existing = USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase());
+            existing.pass    = u.pass;
+            existing.isAdmin = u.isAdmin || existing.isAdmin;
+            if (u.points  !== undefined) existing.points  = Number(u.points)  || 0;
+            if (u.correct !== undefined) existing.correct = Number(u.correct) || 0;
+            if (u.total   !== undefined) existing.total   = Number(u.total)   || 0;
           }
         });
       }
     }
   } catch(e) {}
 
+  // Pobierz świeże dane z Google Sheets
   if (!APP.config.gsScriptUrl) return;
   try {
     const url = APP.config.gsScriptUrl + '?action=getUsers';
@@ -1634,19 +1648,28 @@ async function loadUsersFromSheets() {
       data.forEach(u => {
         const existing = USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase());
         if (!existing) {
-          USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: Number(u.points) || 0, correct: Number(u.correct) || 0, total: Number(u.total) || 0 });
+          USERS.push({
+            nick:    u.nick,
+            pass:    u.pass,
+            isAdmin: u.isAdmin || false,
+            points:  Number(u.points)  || 0,
+            correct: Number(u.correct) || 0,
+            total:   Number(u.total)   || 0
+          });
         } else {
-          existing.pass = u.pass;
+          existing.pass    = u.pass;
           existing.isAdmin = u.isAdmin || existing.isAdmin;
-          if (u.points   !== undefined) existing.points  = Number(u.points)  || 0;
-          if (u.correct  !== undefined) existing.correct = Number(u.correct) || 0;
-          if (u.total    !== undefined) existing.total   = Number(u.total)   || 0;
+          if (u.points  !== undefined) existing.points  = Number(u.points)  || 0;
+          if (u.correct !== undefined) existing.correct = Number(u.correct) || 0;
+          if (u.total   !== undefined) existing.total   = Number(u.total)   || 0;
         }
       });
       localStorage.setItem('mundial_users', JSON.stringify(USERS));
       console.log('Użytkownicy z Sheets:', data.length);
     }
-  } catch(e) { console.warn('loadUsers failed:', e); }
+  } catch(e) {
+    console.warn('loadUsers failed', e);
+  }
 }
 
 function addPlayer() {
