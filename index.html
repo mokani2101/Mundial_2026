@@ -1780,6 +1780,7 @@ async function loadMatchesFromSheets() {
     for (const row of data) {
       const m = MATCHES.find(x => x.id === row.id);
       if (m) {
+	if (row.kickoff) m.kickoff = row.kickoff;
         if (row.odds && row.odds.length === 3) {
           if (row.odds[0] > 1) m.odds = row.odds;
         }
