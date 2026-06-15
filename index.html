@@ -1213,7 +1213,7 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
-  const bets = ALLBETS[nick];
+const bets = (typeof ALLBETS !== 'undefined') ? ALLBETS[nick] : null;
   const hasBets = bets && Object.keys(bets).length > 0;
 
   // Jeśli mamy lokalne typy tego gracza - licz na bieżąco
