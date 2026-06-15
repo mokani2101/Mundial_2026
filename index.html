@@ -1213,23 +1213,29 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
-  const bets = ALL_BETS[nick] || {};
-  let points = 0, correct = 0, total = 0;
-  const hasBets = Object.keys(bets).length > 0;
-  for (const m of MATCHES) {
-    const b = bets[m.id];
-    if (!b) continue;
-    total++;
-    const pts = calcPoints(m, b.pick);
-    if (pts > 0) { points += pts; correct++; }
+  const bets = ALLBETS[nick];
+  const hasBets = bets && Object.keys(bets).length > 0;
+
+  // Jeśli mamy lokalne typy tego gracza - licz na bieżąco
+  if (hasBets) {
+    let points = 0, correct = 0, total = 0;
+    for (const m of MATCHES) {
+      const b = bets[m.id];
+      if (!b) continue;
+      total++;
+      const pts = calcPoints(m, b.pick);
+      if (pts > 0) { points += pts; correct++; }
+    }
+    return { points, correct, total };
   }
-  if (!hasBets) {
-    const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-    if (u && u.points > 0) points = u.points;
-    if (u && u.correct !== undefined) correct = u.correct || 0;
-    if (u && u.total !== undefined) total = u.total || 0;
-  }
-  return { points, correct, total };
+
+  // Brak lokalnych typów → bierz dane z arkusza (USERS[])
+  const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+  return {
+    points: u?.points || 0,
+    correct: u?.correct || 0,
+    total:   u?.total   || 0
+  };
 }
 
 // ============================================================
