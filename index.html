@@ -1213,10 +1213,9 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
-const bets = (typeof ALLBETS !== 'undefined') ? ALLBETS[nick] : null;
+  const bets = (typeof ALLBETS !== 'undefined') ? ALLBETS[nick] : null;
   const hasBets = bets && Object.keys(bets).length > 0;
 
-  // Jeśli mamy lokalne typy tego gracza - licz na bieżąco
   if (hasBets) {
     let points = 0, correct = 0, total = 0;
     for (const m of MATCHES) {
@@ -1229,7 +1228,7 @@ const bets = (typeof ALLBETS !== 'undefined') ? ALLBETS[nick] : null;
     return { points, correct, total };
   }
 
-  // Brak lokalnych typów → bierz dane z arkusza (USERS[])
+  // ← TA CZĘŚĆ MUSI BYĆ:
   const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
   return {
     points: u?.points || 0,
