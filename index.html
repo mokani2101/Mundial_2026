@@ -1216,22 +1216,32 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
-  const bets = ALL_BETS[nick] || {}; const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase()); if (!hasBets) { return { points: u?.points || 0, correct: u?.correct || 0, total: u?.total || 0 }; }
+  const bets = ALL_BETS[nick] || {};
+  const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+  const hasBets = Object.keys(bets).length > 0; // Deklaracja przeniesiona WYŻEJ
+
+  // Zabezpieczenie braku typów
+  if (!hasBets) { 
+    return { 
+      points: u?.points || 0, 
+      correct: u?.correct || 0, 
+      total: u?.total || 0 
+    }; 
+  }
+
   let points = 0, correct = 0, total = 0;
-  const hasBets = Object.keys(bets).length > 0;
+
   for (const m of MATCHES) {
     const b = bets[m.id];
     if (!b) continue;
     total++;
     const pts = calcPoints(m, b.pick);
-    if (pts > 0) { points += pts; correct++; }
+    if (pts > 0) { 
+      points += pts; 
+      correct++; 
+    }
   }
-  if (!hasBets) {
-    const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-    if (u && u.points > 0) points = u.points;
-    if (u && u.correct !== undefined) correct = u.correct || 0;
-    if (u && u.total !== undefined) total = u.total || 0;
-  }
+
   return { points, correct, total };
 }
 
