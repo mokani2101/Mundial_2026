@@ -1622,10 +1622,10 @@ async function loadUsersFromSheets() {
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Zachowaj admina, nadpisz resztę
+        // Zachowaj admina, nadpisz resztę - TERAZ POBIERA TEŻ CORRECT I TOTAL
         parsed.forEach(u => {
           if (!USERS.find(x => x.nick.toLowerCase() === u.nick.toLowerCase())) {
-            USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: 0 });
+            USERS.push({ nick: u.nick, pass: u.pass, isAdmin: u.isAdmin || false, points: Number(u.points) || 0, correct: Number(u.correct) || 0, total: Number(u.total) || 0 });
           }
         });
       }
@@ -1634,8 +1634,9 @@ async function loadUsersFromSheets() {
 
   if (!APP.config.gsScriptUrl) return;
   try {
-    const url = APP.config.gsScriptUrl + '?action=getUsers';
-    const res = await fetch(url);
+    // DODANO: &nocache= + Date.now() - to wymusza ominięcie pamięci podręcznej przeglądarki!
+    const url = APP.config.gsScriptUrl + '?action=getUsers&nocache=' + Date.now();
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return;
     const text = await res.text();
     let data;
@@ -1875,13 +1876,13 @@ async function refreshData() {
       } catch(e) { console.warn('syncMatches failed:', e); }
     }
     // Wszyscy: pobierz aktualne dane z arkusza
+    await loadUsersFromSheets(); // <-- DODANE
     await loadMatchesFromSheets();
     await loadBetsFromSheets();
   }
   renderAll();
   showToast('Dane odświeżone ✓', 'success');
 }
-
 async function fetchLiveOdds() {
   if (!APP.config.oddsApiKey) return;
   try {
