@@ -1216,30 +1216,31 @@ function calcPoints(match, pick) {
   return Math.round(100 * match.odds[idx]);
 }
 function getUserStats(nick) {
+  if (!nick) return { points: 0, correct: 0, total: 0 };
+  const nickStr = String(nick).toLowerCase();
   const bets = ALL_BETS[nick] || {};
-  const u = USERS.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-  const hasBets = Object.keys(bets).length > 0; // Deklaracja przeniesiona WYŻEJ
+  const u = USERS.find(x => x && x.nick && x.nick.toLowerCase() === nickStr) || {};
 
-  // Zabezpieczenie braku typów
-  if (!hasBets) { 
-    return { 
-      points: u?.points || 0, 
-      correct: u?.correct || 0, 
-      total: u?.total || 0 
-    }; 
-  }
+  let points = Number(u.points) || 0;
+  let correct = Number(u.correct) || 0;
+  let total = Number(u.total) || 0;
 
-  let points = 0, correct = 0, total = 0;
-
-  for (const m of MATCHES) {
-    const b = bets[m.id];
-    if (!b) continue;
-    total++;
-    const pts = calcPoints(m, b.pick);
-    if (pts > 0) { 
-      points += pts; 
-      correct++; 
+  if (Object.keys(bets).length > 0) {
+    let locPts = 0, locCor = 0, locTot = 0;
+    for (const m of MATCHES) {
+      const b = bets[m.id];
+      if (!b) continue;
+      locTot++;
+      const pts = calcPoints(m, b.pick);
+      if (pts > 0) { 
+        locPts += pts; 
+        locCor++; 
+      }
     }
+    // Zawsze bierzemy najwyższą wartość – chroni to przed zerowaniem punktów
+    points = Math.max(points, locPts);
+    correct = Math.max(correct, locCor);
+    total = Math.max(total, locTot);
   }
 
   return { points, correct, total };
@@ -1584,8 +1585,7 @@ function renderAdmin() {
         <option value="2" ${m.result==='2'?'selected':''}>2 (D2)</option>
       </select>
       <input id="sc-${m.id}" class="form-input" style="width:80px;padding:var(--space-1) var(--space-2);font-size:var(--text-xs)" placeholder="np. 2-1" value="${m.score||''}">
-      <button class="btn btn-primary btn-sm" onclick="setResult('${m.id}',document.getElementById(\'res-${m.id}\')').value,document.getElementById('sc-${m.id}').value)">Zapisz</button>
-    </div>`).join('');
+<button class="btn btn-primary btn-sm" onclick="setResult('${m.id}', document.getElementById('res-${m.id}').value, document.getElementById('sc-${m.id}').value)">Zapisz</button>    </div>`).join('');
 
   // Config
   document.getElementById('gsScriptUrl').value = APP.config.gsScriptUrl;
