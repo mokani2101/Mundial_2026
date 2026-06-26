@@ -1814,45 +1814,61 @@ async function loadMatchesFromSheets() {
 
 // Pobierz typy bieżącego gracza z Google Sheets
 async function loadBetsFromSheets() {
-  // Zawsze wczytaj z localStorage jako punkt startowy
+  // 1. Zawsze wczytaj z localStorage jako punkt startowy
+  let localBets = {};
   try {
     const cached = localStorage.getItem('bets_' + APP.currentUser.nick);
     if (cached) {
-      const parsed = JSON.parse(cached);
-      Object.assign(APP.bets, parsed);
+      localBets = JSON.parse(cached);
+      Object.assign(APP.bets, localBets);
       ALL_BETS[APP.currentUser.nick] = APP.bets;
-      console.log('Typy z localStorage:', Object.keys(parsed).length);
     }
   } catch(e) {}
 
   if (!APP.config.gsScriptUrl || !APP.currentUser) return;
-  try {
-    const url = APP.config.gsScriptUrl + '?action=getBets&nick=' + encodeURIComponent(APP.currentUser.nick);
-    const res = await fetch(url);
-    if (!res.ok) { console.warn('loadBets HTTP error:', res.status); return; }
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch(e) { console.warn('Bets JSON parse error:', text.substring(0,200)); return; }
 
-    // Obsłuż format obiektowy { matchId: {pick, savedAt} }
-    if (data && typeof data === 'object' && !data.error && !Array.isArray(data)) {
-      Object.assign(APP.bets, data);
-      ALL_BETS[APP.currentUser.nick] = APP.bets;
-      console.log('Typy z Sheets (obiekt):', Object.keys(data).length);
-    }
-    // Obsłuż format tablicowy [{nick, matchId, pick, savedAt}]
-    else if (Array.isArray(data)) {
-      data.forEach(row => {
+  try {
+    // 2. Pobierz aktualne zakłady z Google Sheets (omijając cache)
+    const url = APP.config.gsScriptUrl + '?action=getBets&nick=' + encodeURIComponent(APP.currentUser.nick) + '&nocache=' + Date.now();
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return;
+    const text = await res.text();
+    let serverData;
+    try { serverData = JSON.parse(text); } catch(e) { return; }
+
+    let serverBets = {};
+    if (serverData && typeof serverData === 'object' && !Array.isArray(serverData)) {
+      serverBets = serverData;
+    } else if (Array.isArray(serverData)) {
+      serverData.forEach(row => {
         if (row.matchId && row.pick) {
-          APP.bets[row.matchId] = { pick: row.pick, savedAt: row.savedAt };
+          serverBets[row.matchId] = { pick: row.pick, savedAt: row.savedAt };
         }
       });
-      ALL_BETS[APP.currentUser.nick] = APP.bets;
-      console.log('Typy z Sheets (tablica):', data.length);
     }
 
-    // Zapisz do localStorage jako backup
+    // 3. 🚀 AUTO-SYNC: Uratuj zablokowane zakłady!
+    // Porównujemy pamięć telefonu z serwerem. Jeśli czegoś brakuje u Google, dosyłamy.
+    let missingOnServer = 0;
+    for (const matchId in localBets) {
+      // Jeśli mamy typ na telefonie/komputerze, ale serwer go nie zna
+      if (!serverBets[matchId]) {
+         syncToGoogleSheets(matchId, localBets[matchId].pick);
+         serverBets[matchId] = localBets[matchId]; // Aktualizujemy lokalny obraz serwera
+         missingOnServer++;
+      }
+    }
+
+    if (missingOnServer > 0) {
+       console.log(`Auto-Sync: Wysłano w tle ${missingOnServer} uratowanych zakładów.`);
+       showToast(`Uratowano i zsynchronizowano ${missingOnServer} typów z pamięci urządzenia! 🛟`, 'success');
+    }
+
+    // 4. Połącz dane serwerowe z lokalnymi i zapisz
+    Object.assign(APP.bets, serverBets);
+    ALL_BETS[APP.currentUser.nick] = APP.bets;
     localStorage.setItem('bets_' + APP.currentUser.nick, JSON.stringify(APP.bets));
+
     renderMatches(window._activeFilter || 'all');
   } catch(e) { console.warn('loadBetsFromSheets failed:', e); }
 }
