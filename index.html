@@ -1722,14 +1722,19 @@ async function syncToGoogleSheets(matchId, pick) {
 
   if (!APP.config.gsScriptUrl) return;
   try {
-    const params = new URLSearchParams({
-      action: 'saveBet',
-      nick: APP.currentUser.nick,
-      matchId: matchId,
-      pick: pick,
-      savedAt: new Date().toISOString()
+    // Zmiana na POST + FormData + no-cors rozwiązuje problem blokowania na iPhone/Safari/Brave
+    const formData = new FormData();
+    formData.append('action', 'saveBet');
+    formData.append('nick', APP.currentUser.nick);
+    formData.append('matchId', matchId);
+    formData.append('pick', pick);
+    formData.append('savedAt', new Date().toISOString());
+
+    await fetch(APP.config.gsScriptUrl, {
+      method: 'POST',
+      mode: 'no-cors', // Kluczowe! Wymusza wysłanie paczki bez względu na politykę blokowania skryptów śledzących
+      body: formData
     });
-    await fetch(APP.config.gsScriptUrl + '?' + params.toString());
   } catch(e) { console.warn('GS saveBet failed:', e); }
 }
 
